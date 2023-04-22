@@ -65,8 +65,8 @@ bool UOpenXRHandMotionController::CalculateGrasped()
 		const FVector EndPos = CurrentHandControllerDataCache.HandKeyPositions[CurFingerIndex.Value];
 		CurFingerRange.CurrentDistance = FVector::Distance(StartPos, EndPos);
 		
-		FingerRangePercentages[CurFinger] = CurFingerRange.PercentageOfClosedRange();
-		
+		FingerRangePercentages[i] = CurFingerRange.PercentageOfClosedRange();
+
 		if(CurFingerRange.IsGrasped())
 		{
 			++GraspedCount;

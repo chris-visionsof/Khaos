@@ -3,20 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "HandDefininitions.h"
 #include "IXRTrackingSystem.h"
 
 #include "OpenXRHandMotionController.generated.h"
 
-
-UENUM()
-enum EFingers : int 
-{
-	Thumb = 0,
-	Index = 1,
-	Middle = 2,
-	Ring = 3,
-	Little = 4
-};
 
 USTRUCT(BlueprintType)
 struct FFingerRange
@@ -49,6 +40,8 @@ struct FFingerRange
 UCLASS(ClassGroup=(VR), meta=(BlueprintSpawnableComponent, DisplayName="OpenXR Hand Motion Controller"))
 class KHAOS_API UOpenXRHandMotionController : public USceneComponent 
 {
+	friend class AVRPlayerHand;
+
 	GENERATED_BODY()
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMotionControllerGraspedUpdated, UOpenXRHandMotionController*, GraspedController, bool, bGrasped);
@@ -57,10 +50,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnMotionControllerUpdated, UOpenXR
 public:
 	UOpenXRHandMotionController();
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	UFUNCTION()
 	bool IsGrasped() const 	{ return bGrasped; 	}
+
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	/** Called when the motion controller is grasped based on the FingerGraspCount variable */
 	UPROPERTY(BlueprintAssignable, Category = "VR")
@@ -105,14 +98,8 @@ protected:
 
 	/** The percentage that each finger is within of it's flexed range  **/
 	UPROPERTY(BlueprintReadOnly, Category="VR")
-	TMap<TEnumAsByte<EFingers>, float> FingerRangePercentages = {
-		{ EFingers::Thumb, 0.0f },
-		{ EFingers::Index, 0.0f },
-		{ EFingers::Middle, 0.0f},
-		{ EFingers::Ring, 0.0f },
-		{ EFingers::Little, 0.0f },
-	};
-	
+	TArray<float> FingerRangePercentages = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR", meta=(ClampMax=5, ClampMin=1))
 	uint8 FingerGraspCount = 3;
 
