@@ -3,7 +3,12 @@
 #include "VRPlayerPawn.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
+#include "InputConfigData.h"
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
 #include "Utils/Debugging/VRDebugTextCollectionActor.h"
+#include "EnhancedInput/Public/EnhancedInputComponent.h"
+#include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 
 // Sets default values
 AVRPlayerPawn::AVRPlayerPawn()
@@ -39,16 +44,17 @@ void AVRPlayerPawn::BeginPlay()
 	DebugVRHud->SetGeneralWorldSize(2.0f);
 #endif
 
-	auto HandFunc = [this](TObjectPtr<UChildActorComponent>& HandToSetup, bool bIsRight = true)
+	auto HandSetupFunc = [this](TObjectPtr<UChildActorComponent>& HandToSetup, TObjectPtr<AVRPlayerHand>& ActorRef, bool bIsRight = true)
 	{
 		HandToSetup = NewObject<UChildActorComponent>(this, (bIsRight ? "RightHand": "LeftHand"));
 		HandToSetup->SetChildActorClass((bIsRight ? RightHandComponentType : LeftHandComponentType));
 		HandToSetup->RegisterComponent();
 		HandToSetup->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		ActorRef = Cast<AVRPlayerHand>(HandToSetup->GetChildActor());
 	};
 
-	HandFunc(RightHandComponent);
-	HandFunc(LeftHandComponent, false);
+	HandSetupFunc(RightHandComponent, RightHandActor);
+	HandSetupFunc(LeftHandComponent, LeftHandActor, false);
 }
 
 void AVRPlayerPawn::DisplayDebugText(const FText& DebugMessage, const float& TimeToDisplay, const FColor& DisplayColor)
@@ -61,6 +67,32 @@ void AVRPlayerPawn::DisplayDebugText(const FText& DebugMessage, const float& Tim
 void AVRPlayerPawn::DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay, FColor DisplayColor)
 {
 	DisplayDebugText(DebugMessage, TimeToDisplay, DisplayColor);
+}
+
+void AVRPlayerPawn::OnPlayerGrabAction(const FInputActionValue&, bool bRight) 
+{
+	if(bRight)
+	{
+		RightHandActor->OnPlayerGrabAction();
+	}
+	else
+	{
+		LeftHandActor->OnPlayerGrabAction();
+	}
+}
+
+void AVRPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+ 
+	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
+	Subsystem->ClearAllMappings();
+	Subsystem->AddMappingContext(InputMappingContext, 0);
+ 
+	// Get the EnhancedInputComponent
+	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	PEI->BindAction(InputActions->InputGrab_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, true);
+	PEI->BindAction(InputActions->InputGrab_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, false);
 }
 
 

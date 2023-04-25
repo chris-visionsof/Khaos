@@ -4,7 +4,6 @@
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
 #include "Interactivity/GrabbableComponent.h"
-#include "Utils/Debugging/DebugTextChildComponent.h"
 
 namespace 
 {
@@ -19,7 +18,6 @@ AVRPlayerHand::AVRPlayerHand()
 	PrimaryActorTick.bCanEverTick = true;
 
 	MotionControllerComponent = CreateDefaultSubobject<UOpenXRHandMotionController>("MotionController");
-	MotionControllerComponent->OnMotionControllerGraspedUpdated.AddDynamic(this, &AVRPlayerHand::OnMotionControllerGraspedUpdated);
 	SetRootComponent(MotionControllerComponent);
 	AddInstanceComponent(MotionControllerComponent);
 
@@ -42,12 +40,13 @@ AVRPlayerHand::AVRPlayerHand()
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("HandSkeletalMesh");
 	SkeletalMeshComponent->SetupAttachment(CoreHandCollision);
-	SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	SkeletalMeshComponent->SetCollisionProfileName(UCollisionProfile::Pawn_ProfileName);
-	SkeletalMeshComponent->SetGenerateOverlapEvents(true);
-	SkeletalMeshComponent->OnComponentBeginOverlap.AddDynamic(this, &AVRPlayerHand::OnHandBeginOverlap);
-	SkeletalMeshComponent->OnComponentEndOverlap.AddDynamic(this, &AVRPlayerHand::OnHandEndOverlap);
+	SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	AddInstanceComponent(SkeletalMeshComponent);
+
+	GrabOverlapBox = CreateDefaultSubobject<UBoxComponent>("GrabOverlapBox");
+	GrabOverlapBox->OnComponentBeginOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxBeginOverlap);
+	GrabOverlapBox->OnComponentEndOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxEndOverlap);
+	GrabOverlapBox->SetupAttachment(SkeletalMeshComponent);
 
 	auto CollisionSplineSetup = [this](TObjectPtr<USplineComponent>& SplineComponentToSetup, FName Name)
 	{
@@ -64,9 +63,19 @@ AVRPlayerHand::AVRPlayerHand()
 	CollisionSplineSetup(LittleCollisionSpline, "LittleCollisionSpline");
 }
 
+void AVRPlayerHand::OnPlayerGrabAction()
+{
+	if(OverlappingActor.IsSet())
+	{
+		OverlappingActor.GetValue().Value->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform);
+	}
+}
+
 void AVRPlayerHand::Tick(float DeltaSeconds)
 {
 	FingerCollisionRangeTargetPercentages = MotionControllerComponent->FingerRangePercentages;
+
+	int FingersGrasped = 0;
 
 	for (int fingerIndex = 0; fingerIndex < 5; ++fingerIndex)
 	{
@@ -108,6 +117,8 @@ void AVRPlayerHand::Tick(float DeltaSeconds)
 					float TraceFingerPercentage = FingerTraceLength / FingerSplineTotalRanges[fingerIndex];
 					if(MotionControlFingerPercentage > TraceFingerPercentage)
 					{
+						++FingersGrasped;
+
 						FingerCollisionRangeTargetPercentages[fingerIndex] = TraceFingerPercentage + FingerCollisionOvershoot;
 					}
 					break;
@@ -157,33 +168,24 @@ void AVRPlayerHand::PostInitializeComponents()
 	MotionControllerComponent->bRight = bRightHand;
 }
 
-void AVRPlayerHand::OnMotionControllerGraspedUpdated(UOpenXRHandMotionController* GraspedController, bool bGrasped)
-{
-	if(bGrasped == false) { return; }
-
-	if(!OverlappingActor.IsSet()) { return; }
-
-	OnPlayerGraspedActor(this, OverlappingActor.GetValue().Key, OverlappingActor.GetValue().Value);
-}
-
-void AVRPlayerHand::OnHandBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void AVRPlayerHand::OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
 {
 	if(!IsValid(OtherActor)) { return; }
 
-	if(!OverlappedComponent->IsA(UGrabbableComponent::StaticClass()))
+	if(OtherComp->IsA(UGrabbableComponent::StaticClass()))
 	{
 		UGrabbableComponent* GrabbableComp = Cast<UGrabbableComponent>(OtherComp);
 		OverlappingActor = TTuple<TObjectPtr<UGrabbableComponent>, TObjectPtr<AActor>>(GrabbableComp, OtherActor);
 	}
 }
 
-void AVRPlayerHand::OnHandEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+void AVRPlayerHand::OnGrabBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32)
 {
 	if(!IsValid(OtherActor) || !OverlappingActor.IsSet()) { return; }
 
-	if(!OverlappedComponent->IsA(UGrabbableComponent::StaticClass())
+	if(OtherComp->IsA(UGrabbableComponent::StaticClass())
 		&& OtherActor == OverlappingActor.GetValue().Value.Get())
 	{
 		OverlappingActor.Reset();

@@ -19,7 +19,10 @@ public:
 	AVRPlayerHand();
 
 	UFUNCTION(BlueprintImplementableEvent, Category="VR")
-	void OnPlayerGraspedActor(AVRPlayerHand* GraspingHand, UGrabbableComponent* GraspedComp, AActor* GraspedActor);
+	void OnPlayerGrabbedActorEvent(AVRPlayerHand* GraspingHand, UGrabbableComponent* GraspedComp, AActor* GraspedActor);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void OnPlayerGrabAction();
 
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -42,13 +45,10 @@ protected:
 	virtual void PostInitializeComponents() override;
 
 	UFUNCTION()
-	virtual void OnMotionControllerGraspedUpdated(UOpenXRHandMotionController* GraspedController, bool bGrasped);
+	virtual void OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
-	virtual void OnHandBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	virtual void OnHandEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	virtual void OnGrabBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	TArray<TArray<FVector, TInlineAllocator<5>>, TInlineAllocator<5>> FingerCollisionPositions;
 
@@ -74,6 +74,9 @@ protected:
 	bool bFingerCollisionDebugTracing;
 #endif
 
+	UPROPERTY(BlueprintReadOnly, DisplayName="Is Grasped", Category="VR|Hands")
+	bool bIsGrasped = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Motion Controller", Category="Hands")
 	TObjectPtr<UOpenXRHandMotionController> MotionControllerComponent;
 
@@ -89,8 +92,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Core Hand Collision", Category="VR|Hands")
 	TObjectPtr<UStaticMeshComponent> CoreHandCollision;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Hand SkeletalMesh", Category="VR|Hands")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Hand Skeletal Mesh", Category="VR|Hands")
 	TObjectPtr<USkeletalMeshComponent> SkeletalMeshComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Grab Overlap Box", Category="VR|Hands")
+	TObjectPtr<UBoxComponent> GrabOverlapBox;
 
 	// Collision Spines
 

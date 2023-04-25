@@ -6,6 +6,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
 #include "OpenXRHandMotionController.h"
+#include "InputConfigData.h"
 #include "VRPlayerHand.h"
 
 #include "VRPlayerPawn.generated.h"
@@ -28,6 +29,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="VR|Debug", DisplayName="Display Debug Text", meta=(AdvancedDisplay=1))
 	virtual void DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay=5.0f, FColor DisplayColor=FColor::Red);
 
+	void OnPlayerGrabAction(const FInputActionValue& Value, bool bRight);
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Camera")
 	TEnumAsByte<EHMDTrackingOrigin::Type> VRTrackingOrigin = EHMDTrackingOrigin::Floor;
 
@@ -45,9 +50,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Left Hand", Category="VR|Hands")
 	TObjectPtr<UChildActorComponent> LeftHandComponent;
 
+	UPROPERTY(BlueprintReadOnly, DisplayName="Left Hand Actor", Category="VR|Hands")
+	TObjectPtr<AVRPlayerHand> LeftHandActor;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, DisplayName="Right Hand Component Type", Category="VR|Hands")
 	TSubclassOf<AVRPlayerHand> RightHandComponentType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Right Hand", Category="VR|Hands")
 	TObjectPtr<UChildActorComponent> RightHandComponent;
+
+	UPROPERTY(BlueprintReadOnly, DisplayName="Right Hand Actor", Category="VR|Hands")
+	TObjectPtr<AVRPlayerHand> RightHandActor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<class UInputMappingContext> InputMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<UInputConfigData> InputActions;
 };

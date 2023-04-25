@@ -54,7 +54,6 @@ void UOpenXRHandMotionController::BeginPlay()
 
 bool UOpenXRHandMotionController::CalculateGrasped()
 {
-	int GraspedCount = 0;
 	for (int i = 0; i < FINGER_INDEXES.Num(); ++i)
 	{
 		const EFingers CurFinger = static_cast<EFingers>(i);
@@ -67,17 +66,12 @@ bool UOpenXRHandMotionController::CalculateGrasped()
 		
 		FingerRangePercentages[i] = CurFingerRange.PercentageOfClosedRange();
 
-		if(CurFingerRange.IsGrasped())
-		{
-			++GraspedCount;
-		}
-
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 		if(bRenderDebugGrasp)
 		{
-			const FColor RenderColor = (CurFingerRange.IsGrasped() ? FColor::Green : FColor::Red);
+			const FColor RenderColor = FColor::Green;
 			FingerClosedDistanceRenderTexts[i]->SetWorldLocation(EndPos + CurrentHandControllerDataCache.GripRotation.GetNormalized().RotateVector(FVector(1, 3, -1)));
-			FingerClosedDistanceRenderTexts[i]->SetText(FText::FormatOrdered(FText::FromString("{0} / {1}"), CurFingerRange.CurrentDistance, CurFingerRange.GraspedDistance));
+			FingerClosedDistanceRenderTexts[i]->SetText(FText::FormatOrdered(FText::FromString("{0}"), CurFingerRange.CurrentDistance));
 			FingerClosedDistanceRenderTexts[i]->SetTextRenderColor(RenderColor);
 			
 			DrawDebugLine(GetWorld(), StartPos, EndPos, RenderColor, bPERSISTENT_LINES, DEBUG_LIFE_TIME, DEPTH_PRIORITY, (THICKNESS * 2.5));
@@ -85,25 +79,6 @@ bool UOpenXRHandMotionController::CalculateGrasped()
 #endif
 	}
 
-	const bool bCurrentlyGrasped = GraspedCount >= FingerGraspCount;
-	
-	if(bCurrentlyGrasped != bGrasped && OnMotionControllerGraspedUpdated.IsBound())
-	{
-		OnMotionControllerGraspedUpdated.Broadcast(this, bCurrentlyGrasped);
-	}
-
-	bGrasped = bCurrentlyGrasped;
-
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-	// Render a sphere indicator to show that the hand is gripped 
-	if(bRenderDebugGrasp && bGrasped)
-	{
-		const FVector MiddleStartPos = CurrentHandControllerDataCache.HandKeyPositions[FINGER_INDEXES[2].Key];
-		const FVector GripIndicatorCenter = MiddleStartPos + CurrentHandControllerDataCache.GripRotation.RotateVector(FVector(0, (bRight ? 5 : -5), 0));
-		DrawDebugPoint(GetWorld(), GripIndicatorCenter, 30, FColor::Green, bPERSISTENT_LINES, DEBUG_LIFE_TIME, DEPTH_PRIORITY);
-	}
-#endif
-	
 	return false;
 }
 
