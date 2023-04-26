@@ -29,7 +29,7 @@ UGrabbableComponent::UGrabbableComponent()
 	CanCharacterStepUpOn = ECB_No;
 	Mobility = EComponentMobility::Movable;
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	SetCollisionObjectType(ECC_WorldDynamic);
+	SetCollisionProfileName("Interactivity");
 	SetCollisionResponseToAllChannels(ECR_Overlap);
 
 	BodyInstance.bAutoWeld = true;
@@ -176,7 +176,7 @@ void UGrabbableComponent::SetGrabState(EGrabState NewGrabState)
 void UGrabbableComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                          UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(IsValid(OtherActor) && OtherActor->IsA(AVRPlayerPawn::StaticClass()))
+	if(IsValid(OtherActor) && OtherActor->IsA(AVRPlayerHand::StaticClass()))
 	{
 		SetGrabState(EGrabState::Grabbable);
 	}
@@ -185,7 +185,7 @@ void UGrabbableComponent::OnBeginOverlap(UPrimitiveComponent* OverlappedComponen
 void UGrabbableComponent::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if(IsValid(OtherActor) && OtherActor->IsA(AVRPlayerPawn::StaticClass()))
+	if(IsValid(OtherActor) && OtherActor->IsA(AVRPlayerHand::StaticClass()))
 	{
 		SetGrabState(EGrabState::Idle);
 	}

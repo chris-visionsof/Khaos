@@ -81,6 +81,18 @@ void AVRPlayerPawn::OnPlayerGrabAction(const FInputActionValue&, bool bRight)
 	}
 }
 
+void AVRPlayerPawn::OnPlayerReleaseAction(const FInputActionValue& Value, bool bRight)
+{
+	if(bRight)
+	{
+		RightHandActor->OnPlayerReleaseAction();
+	}
+	else
+	{
+		LeftHandActor->OnPlayerReleaseAction();
+	}
+}
+
 void AVRPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	APlayerController* PC = Cast<APlayerController>(GetController());
@@ -93,6 +105,8 @@ void AVRPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	PEI->BindAction(InputActions->InputGrab_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, true);
 	PEI->BindAction(InputActions->InputGrab_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, false);
+	PEI->BindAction(InputActions->InputGrab_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerReleaseAction, true);
+	PEI->BindAction(InputActions->InputGrab_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerReleaseAction, false);
 }
 
 

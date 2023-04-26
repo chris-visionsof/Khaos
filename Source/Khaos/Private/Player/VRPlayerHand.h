@@ -23,6 +23,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnPlayerGrabAction();
+	
+	UFUNCTION(BlueprintCallable)
+	virtual void OnPlayerReleaseAction();
 
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -83,7 +86,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Hand Root", Category="VR|Hands")
 	TObjectPtr<class USphereComponent> HandRoot;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Motion Controller", Category="VR|Hands")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Root Constraint", Category="VR|Hands")
 	TObjectPtr<UPhysicsConstraintComponent> RootConstraint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Root Box Collision", Category="VR|Hands")
@@ -94,6 +97,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Hand Skeletal Mesh", Category="VR|Hands")
 	TObjectPtr<USkeletalMeshComponent> SkeletalMeshComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Grab Constraint", Category="VR|Hands")
+	TObjectPtr<UPhysicsConstraintComponent> GrabConstraint;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Grab Overlap Box", Category="VR|Hands")
 	TObjectPtr<UBoxComponent> GrabOverlapBox;

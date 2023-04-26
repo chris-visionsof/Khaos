@@ -31,6 +31,8 @@ protected:
 
 	void OnPlayerGrabAction(const FInputActionValue& Value, bool bRight);
 
+	void OnPlayerReleaseAction(const FInputActionValue& Value, bool bRight);
+
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Camera")

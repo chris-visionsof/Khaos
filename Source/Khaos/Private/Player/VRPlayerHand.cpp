@@ -19,31 +19,33 @@ AVRPlayerHand::AVRPlayerHand()
 
 	MotionControllerComponent = CreateDefaultSubobject<UOpenXRHandMotionController>("MotionController");
 	SetRootComponent(MotionControllerComponent);
-	AddInstanceComponent(MotionControllerComponent);
 
 	HandRoot = CreateDefaultSubobject<USphereComponent>("HandRoot");
 	HandRoot->SetupAttachment(MotionControllerComponent);
-	AddInstanceComponent(HandRoot);
-
-	RootConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>("RootConstraint");
-	RootConstraint->SetupAttachment(HandRoot);
-	RootConstraint->ComponentName1 = FConstrainComponentPropName { "RootBoxCollision" };
-	RootConstraint->ComponentName2 = FConstrainComponentPropName { "HandRoot" };
 
 	RootBoxCollision = CreateDefaultSubobject<UBoxComponent>("RootBoxCollision");
 	RootBoxCollision->SetupAttachment(HandRoot);
-	AddInstanceComponent(RootBoxCollision);
 
+	RootConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>("RootConstraint");
+	RootConstraint->SetupAttachment(HandRoot);
+	RootConstraint->OverrideComponent1 = RootBoxCollision;
+	RootConstraint->ComponentName1 = FConstrainComponentPropName { RootBoxCollision.GetFName() };
+	RootConstraint->OverrideComponent2 = HandRoot;
+	RootConstraint->ComponentName2 = FConstrainComponentPropName { HandRoot.GetFName() };
+	
 	CoreHandCollision = CreateDefaultSubobject<UStaticMeshComponent>("CoreHandCollision");
 	CoreHandCollision->SetupAttachment(RootBoxCollision);
-	AddInstanceComponent(CoreHandCollision);
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("HandSkeletalMesh");
 	SkeletalMeshComponent->SetupAttachment(CoreHandCollision);
 	SkeletalMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	AddInstanceComponent(SkeletalMeshComponent);
+
+	GrabConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>("GrabConstraint");
+	GrabConstraint->SetupAttachment(SkeletalMeshComponent);
 
 	GrabOverlapBox = CreateDefaultSubobject<UBoxComponent>("GrabOverlapBox");
+	GrabOverlapBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	GrabOverlapBox->SetCollisionProfileName("Interactivity");
 	GrabOverlapBox->OnComponentBeginOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxBeginOverlap);
 	GrabOverlapBox->OnComponentEndOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxEndOverlap);
 	GrabOverlapBox->SetupAttachment(SkeletalMeshComponent);
@@ -65,9 +67,27 @@ AVRPlayerHand::AVRPlayerHand()
 
 void AVRPlayerHand::OnPlayerGrabAction()
 {
+	if(!bIsGrasped && OverlappingActor.IsSet())
+	{
+		// TODO: Probably should default to the root. Should probably take the grabbable component and go up the parent tree
+		if(const auto PrimitiveComponent = Cast<UPrimitiveComponent>(OverlappingActor.GetValue().Value->GetRootComponent()))
+		{
+			GrabConstraint->OverrideComponent1 = SkeletalMeshComponent;
+			GrabConstraint->ComponentName1 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
+			GrabConstraint->OverrideComponent2 = PrimitiveComponent;
+			GrabConstraint->ComponentName2 = FConstrainComponentPropName { PrimitiveComponent->GetFName() };
+			GrabConstraint->InitComponentConstraint();
+			bIsGrasped = true;
+		}
+	}
+}
+
+void AVRPlayerHand::OnPlayerReleaseAction()
+{
 	if(OverlappingActor.IsSet())
 	{
-		OverlappingActor.GetValue().Value->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform);
+		GrabConstraint->BreakConstraint();
+		bIsGrasped = false;
 	}
 }
 
@@ -101,8 +121,7 @@ void AVRPlayerHand::Tick(float DeltaSeconds)
 
 				FHitResult Hit;
 				FCollisionQueryParams TraceParams{};
-				TraceParams.AddIgnoredActor(this);
-				TraceParams.AddIgnoredActor(GetOwner());
+				TraceParams.AddIgnoredActors(TArray<AActor*>{ this, GetOwner() });
 				if(GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_WorldDynamic, TraceParams))
 				{
 					FingerTraceLength += FVector::Distance(TraceStart, Hit.Location);
