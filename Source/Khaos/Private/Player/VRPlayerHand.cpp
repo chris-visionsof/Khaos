@@ -1,9 +1,11 @@
 #include "VRPlayerHand.h"
 
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
 #include "Interactivity/GrabbableComponent.h"
+#include "Interactivity/InteractivityDefinitions.h"
 
 namespace 
 {
@@ -34,6 +36,8 @@ AVRPlayerHand::AVRPlayerHand()
 	RootConstraint->ComponentName2 = FConstrainComponentPropName { HandRoot.GetFName() };
 	
 	CoreHandCollision = CreateDefaultSubobject<UStaticMeshComponent>("CoreHandCollision");
+	CoreHandCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	CoreHandCollision->SetCollisionProfileName(PawnBlockAllButSelf_ProfileName);
 	CoreHandCollision->SetupAttachment(RootBoxCollision);
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("HandSkeletalMesh");
@@ -45,24 +49,43 @@ AVRPlayerHand::AVRPlayerHand()
 
 	GrabOverlapBox = CreateDefaultSubobject<UBoxComponent>("GrabOverlapBox");
 	GrabOverlapBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	GrabOverlapBox->SetCollisionProfileName("Interactivity");
+	GrabOverlapBox->SetCollisionProfileName(Interactivity_ProfileName);
 	GrabOverlapBox->OnComponentBeginOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxBeginOverlap);
 	GrabOverlapBox->OnComponentEndOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxEndOverlap);
 	GrabOverlapBox->SetupAttachment(SkeletalMeshComponent);
 
-	auto CollisionSplineSetup = [this](TObjectPtr<USplineComponent>& SplineComponentToSetup, FName Name)
+	auto CollisionSplineSetup = [this](TObjectPtr<USplineComponent>& SplineComponentToSetup, const FString& Name)
 	{
-		SplineComponentToSetup = CreateDefaultSubobject<USplineComponent>(Name);
+		SplineComponentToSetup = CreateDefaultSubobject<USplineComponent>(FName(*FString::Printf(TEXT("%lsCollisionSpline"), *Name)));
 		SplineComponentToSetup->SetupAttachment(SkeletalMeshComponent);
 		SplineComponentToSetup->Duration = 1.0f;
 		SplineCollisionComponents.Add(SplineComponentToSetup);
 	};
 
-	CollisionSplineSetup(ThumbCollisionSpline, "ThumbCollisionSpline");
-	CollisionSplineSetup(IndexCollisionSpline, "IndexCollisionSpline");
-	CollisionSplineSetup(MiddleCollisionSpline, "MiddleCollisionSpline");
-	CollisionSplineSetup(RingCollisionSpline, "RingCollisionSpline");
-	CollisionSplineSetup(LittleCollisionSpline, "LittleCollisionSpline");
+	CollisionSplineSetup(ThumbCollisionSpline, "Thumb");
+	CollisionSplineSetup(IndexCollisionSpline, "Index");
+	CollisionSplineSetup(MiddleCollisionSpline, "Middle");
+	CollisionSplineSetup(RingCollisionSpline, "Ring");
+	CollisionSplineSetup(LittleCollisionSpline, "Little");
+
+	auto FingerCollisionSetup = [this](TObjectPtr<USceneComponent>& PositionComp, TObjectPtr<UCapsuleComponent>& CollisionComp, const FString& Name)
+	{
+		PositionComp = CreateDefaultSubobject<USceneComponent>(FName(*FString::Printf(TEXT("%lsCollisionPosition"), *Name)));
+		PositionComp->SetupAttachment(SkeletalMeshComponent);
+
+		CollisionComp = CreateDefaultSubobject<UCapsuleComponent>(FName(*FString::Printf(TEXT("%lsCollision"), *Name)));
+		CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		CollisionComp->SetCollisionProfileName(PawnBlockAllButSelf_ProfileName);
+		CollisionComp->SetupAttachment(CoreHandCollision);
+	};
+
+	FingerCollisionSetup(ThumbCollisionPosition, ThumbCollision, "Thumb");
+	FingerCollisionSetup(IndexCollisionPosition, IndexCollision, "Index");
+	FingerCollisionSetup(MiddleCollisionPosition, MiddleCollision, "Middle");
+	FingerCollisionSetup(RingCollisionPosition, RingCollision, "Ring");
+	FingerCollisionSetup(LittleCollisionPosition, LittleCollision, "Little");
+
+	PositionFingerCollisions();
 }
 
 void AVRPlayerHand::OnPlayerGrabAction()
@@ -150,6 +173,8 @@ void AVRPlayerHand::Tick(float DeltaSeconds)
 		EFingers namedFinger = static_cast<EFingers>(fingerIndex);
 		FingerCollisionRangePercentages[namedFinger] = FMath::FInterpTo(FingerCollisionRangePercentages[namedFinger], FingerCollisionRangeTargetPercentages[fingerIndex], DeltaSeconds, FingerInterpSpeed);
 	}
+
+	PositionFingerCollisions();
 }
 
 TMap<TEnumAsByte<EFingers>, float> AVRPlayerHand::GetFingerRangePercentages()
@@ -160,6 +185,12 @@ TMap<TEnumAsByte<EFingers>, float> AVRPlayerHand::GetFingerRangePercentages()
 void AVRPlayerHand::BeginPlay()
 {
 	Super::BeginPlay();
+
+	ThumbCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "thumb_02_r");
+	IndexCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "index_01_r");
+	MiddleCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "middle_01_r");
+	RingCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "ring_01_r");
+	LittleCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "pinky_01_r");
 
 	for (int fingerIndex = 0; fingerIndex < 5; ++fingerIndex)
 	{
@@ -175,7 +206,6 @@ void AVRPlayerHand::BeginPlay()
 				FingerSplineTotalRanges[fingerIndex] += FVector::Distance(CurrentFingerCollisionPositions[timePositionIndex], CurrentFingerCollisionPositions[timePositionIndex-1]);
 			}
 		}
-
 		FingerCollisionPositions.Add(CurrentFingerCollisionPositions);
 	}
 }
@@ -187,8 +217,26 @@ void AVRPlayerHand::PostInitializeComponents()
 	MotionControllerComponent->bRight = bRightHand;
 }
 
+void AVRPlayerHand::PositionFingerCollisions() const
+{
+#define POS_FINGER_COLLISION(FingerName)																\
+	FingerName##Collision->SetWorldLocation(##FingerName##CollisionPosition->GetComponentLocation());	\
+	FingerName##Collision->SetWorldRotation(##FingerName##CollisionPosition->GetComponentRotation());	\
+	FingerName##Collision->SetRelativeScale3D(FVector(1.0f, 1.0f, FMath::GetMappedRangeValueClamped(	\
+		TRange<float>(0.0f, 1.0f),																		\
+		TRange<float>(1.0f, 0.5),																		\
+		MotionControllerComponent->FingerRangePercentages[EFingers::FingerName])));
+
+	POS_FINGER_COLLISION(Thumb)
+	POS_FINGER_COLLISION(Index)
+	POS_FINGER_COLLISION(Middle)
+	POS_FINGER_COLLISION(Ring)
+	POS_FINGER_COLLISION(Little)
+#undef POS_FINGER_COLLISION
+}
+
 void AVRPlayerHand::OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
+                                          UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
 {
 	if(!IsValid(OtherActor)) { return; }
 

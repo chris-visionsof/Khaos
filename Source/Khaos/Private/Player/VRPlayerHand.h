@@ -44,14 +44,16 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	virtual void PostInitializeComponents() override;
-
+	
 	UFUNCTION()
 	virtual void OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	UFUNCTION()
 	virtual void OnGrabBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	virtual void PostInitializeComponents() override;
+
+	void PositionFingerCollisions() const;
 
 	TArray<TArray<FVector, TInlineAllocator<5>>, TInlineAllocator<5>> FingerCollisionPositions;
 
@@ -104,11 +106,42 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Grab Overlap Box", Category="VR|Hands")
 	TObjectPtr<UBoxComponent> GrabOverlapBox;
 
+	// Finger Collision
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Thumb Collision Postion", Category="VR|Hands")
+	TObjectPtr<USceneComponent> ThumbCollisionPosition;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Thumb Collision", Category="VR|Hands")
+	TObjectPtr<class UCapsuleComponent> ThumbCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Index Collision Postion", Category="VR|Hands")
+	TObjectPtr<USceneComponent> IndexCollisionPosition;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Index Collision", Category="VR|Hands")
+	TObjectPtr<UCapsuleComponent> IndexCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Middle Collision Postion", Category="VR|Hands")
+	TObjectPtr<USceneComponent> MiddleCollisionPosition;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Middle Collision", Category="VR|Hands")	
+	TObjectPtr<UCapsuleComponent> MiddleCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Ring Collision Postion", Category="VR|Hands")
+	TObjectPtr<USceneComponent> RingCollisionPosition;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Ring Collision", Category="VR|Hands")
+	TObjectPtr<UCapsuleComponent> RingCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Little Collision Postion", Category="VR|Hands")
+	TObjectPtr<USceneComponent> LittleCollisionPosition;	
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Little Collision", Category="VR|Hands")	
+	TObjectPtr<UCapsuleComponent> LittleCollision;
+
 	// Collision Spines
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Thumb Collision Spline", Category="VR|Hands")
 	TObjectPtr<USplineComponent> ThumbCollisionSpline;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Index Collision Spline", Category="VR|Hands")
 	TObjectPtr<USplineComponent> IndexCollisionSpline;
 
