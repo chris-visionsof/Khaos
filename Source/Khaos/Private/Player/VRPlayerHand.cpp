@@ -1,11 +1,10 @@
 #include "VRPlayerHand.h"
 
+#include "KhaosDefinitions.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
-#include "Interactivity/GrabbableComponent.h"
-#include "Interactivity/InteractivityDefinitions.h"
 
 namespace 
 {
@@ -37,7 +36,7 @@ AVRPlayerHand::AVRPlayerHand()
 	
 	CoreHandCollision = CreateDefaultSubobject<UStaticMeshComponent>("CoreHandCollision");
 	CoreHandCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	CoreHandCollision->SetCollisionProfileName(PawnBlockAllButSelf_ProfileName);
+	CoreHandCollision->SetCollisionProfileName(CollisionProfiles::PawnBlockAllButSelf);
 	CoreHandCollision->SetupAttachment(RootBoxCollision);
 
 	SkeletalMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("HandSkeletalMesh");
@@ -49,9 +48,7 @@ AVRPlayerHand::AVRPlayerHand()
 
 	GrabOverlapBox = CreateDefaultSubobject<UBoxComponent>("GrabOverlapBox");
 	GrabOverlapBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	GrabOverlapBox->SetCollisionProfileName(Interactivity_ProfileName);
-	GrabOverlapBox->OnComponentBeginOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxBeginOverlap);
-	GrabOverlapBox->OnComponentEndOverlap.AddDynamic(this, &AVRPlayerHand::OnGrabBoxEndOverlap);
+	GrabOverlapBox->SetCollisionProfileName(CollisionProfiles::InteractiveTrigger);
 	GrabOverlapBox->SetupAttachment(SkeletalMeshComponent);
 
 	auto CollisionSplineSetup = [this](TObjectPtr<USplineComponent>& SplineComponentToSetup, const FString& Name)
@@ -75,7 +72,7 @@ AVRPlayerHand::AVRPlayerHand()
 
 		CollisionComp = CreateDefaultSubobject<UCapsuleComponent>(FName(*FString::Printf(TEXT("%lsCollision"), *Name)));
 		CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		CollisionComp->SetCollisionProfileName(PawnBlockAllButSelf_ProfileName);
+		CollisionComp->SetCollisionProfileName(CollisionProfiles::PawnBlockAllButSelf);
 		CollisionComp->SetupAttachment(CoreHandCollision);
 	};
 
@@ -88,34 +85,60 @@ AVRPlayerHand::AVRPlayerHand()
 	PositionFingerCollisions();
 }
 
+bool AVRPlayerHand::GetHeldActor(FGrabbedActor& GrabbedActorOut)
+{
+	if(bIsGrasped)
+	{
+		GrabbedActorOut = HeldActor.GetValue();
+		return true;
+	}
+
+	return false;
+}
+
 void AVRPlayerHand::OnPlayerGrabAction()
 {
-	if(!bIsGrasped && OverlappingActor.IsSet())
+	if(bIsGrasped) { return; }
+
+	TArray<UPrimitiveComponent*> OverlappingComps;
+	GrabOverlapBox->GetOverlappingComponents(OverlappingComps);
+	for (UPrimitiveComponent* OverlappingComp : OverlappingComps)
 	{
-		// TODO: Probably should default to the root. Should probably take the grabbable component and go up the parent tree
-		if(const auto PrimitiveComponent = Cast<UPrimitiveComponent>(OverlappingActor.GetValue().Value->GetRootComponent()))
+		// TODO: Probably shouldn't default to the root. Should probably take the grabbable component and go up the parent tree
+		AActor* OwningActor = OverlappingComp->GetOwner();
+		if(const auto RootPrimitive = Cast<UPrimitiveComponent>(OwningActor->GetRootComponent()))
 		{
-			GrabConstraint->OverrideComponent1 = SkeletalMeshComponent;
-			GrabConstraint->ComponentName1 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
-			GrabConstraint->OverrideComponent2 = PrimitiveComponent;
-			GrabConstraint->ComponentName2 = FConstrainComponentPropName { PrimitiveComponent->GetFName() };
+			GrabConstraint->OverrideComponent2 = SkeletalMeshComponent;
+			GrabConstraint->ComponentName2 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
+			GrabConstraint->OverrideComponent1 = RootPrimitive;
+			GrabConstraint->ComponentName1 = FConstrainComponentPropName { RootPrimitive->GetFName() };
 			GrabConstraint->InitComponentConstraint();
 			bIsGrasped = true;
+
+			auto GrabbedTrans = RootPrimitive->GetComponentTransform();
+			GrabbedTrans.SetScale3D(FVector::One());
+			
+			HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive, GrabbedTrans.InverseTransformPosition(GrabConstraint->GetComponentLocation()) });
+			//OnPlayerGrabbedActorEvent(HeldActor.GetValue());
+			break;
 		}
 	}
 }
 
 void AVRPlayerHand::OnPlayerReleaseAction()
 {
-	if(OverlappingActor.IsSet())
+	if(bIsGrasped)
 	{
 		GrabConstraint->BreakConstraint();
+		HeldActor.Reset();
 		bIsGrasped = false;
 	}
 }
 
 void AVRPlayerHand::Tick(float DeltaSeconds)
 {
+	Super::Tick(DeltaSeconds);
+
 	FingerCollisionRangeTargetPercentages = MotionControllerComponent->FingerRangePercentages;
 
 	int FingersGrasped = 0;
@@ -186,6 +209,7 @@ void AVRPlayerHand::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// TODO: Get rid of strings and let then set in editor
 	ThumbCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "thumb_02_r");
 	IndexCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "index_01_r");
 	MiddleCollisionPosition->AttachToComponent(SkeletalMeshComponent, FAttachmentTransformRules::KeepWorldTransform,  "middle_01_r");
@@ -234,28 +258,3 @@ void AVRPlayerHand::PositionFingerCollisions() const
 	POS_FINGER_COLLISION(Little)
 #undef POS_FINGER_COLLISION
 }
-
-void AVRPlayerHand::OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                                          UPrimitiveComponent* OtherComp, int32, bool, const FHitResult&)
-{
-	if(!IsValid(OtherActor)) { return; }
-
-	if(OtherComp->IsA(UGrabbableComponent::StaticClass()))
-	{
-		UGrabbableComponent* GrabbableComp = Cast<UGrabbableComponent>(OtherComp);
-		OverlappingActor = TTuple<TObjectPtr<UGrabbableComponent>, TObjectPtr<AActor>>(GrabbableComp, OtherActor);
-	}
-}
-
-void AVRPlayerHand::OnGrabBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32)
-{
-	if(!IsValid(OtherActor) || !OverlappingActor.IsSet()) { return; }
-
-	if(OtherComp->IsA(UGrabbableComponent::StaticClass())
-		&& OtherActor == OverlappingActor.GetValue().Value.Get())
-	{
-		OverlappingActor.Reset();
-	}
-}
-

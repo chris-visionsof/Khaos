@@ -8,7 +8,20 @@
 
 #include "VRPlayerHand.generated.h"
 
-typedef TOptional<TTuple<TObjectPtr<class UGrabbableComponent>, TObjectPtr<AActor>>> OptionalGraspedPair;
+USTRUCT(BlueprintType)
+struct FGrabbedActor
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<AActor> GrabbedActor;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UPrimitiveComponent> GrabbedComponent;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector LocalGrabLocation;
+};
 
 UCLASS(ClassGroup=VR)
 class KHAOS_API AVRPlayerHand : public AActor
@@ -18,8 +31,14 @@ class KHAOS_API AVRPlayerHand : public AActor
 public:
 	AVRPlayerHand();
 
-	UFUNCTION(BlueprintImplementableEvent, Category="VR")
-	void OnPlayerGrabbedActorEvent(AVRPlayerHand* GraspingHand, UGrabbableComponent* GraspedComp, AActor* GraspedActor);
+	UFUNCTION(BlueprintCallable, Category="VR|Hands")
+	bool GetHeldActor(FGrabbedActor& GrabbedActorOut);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category="VR|Hands")
+	void OnPlayerGrabbedActorEvent(FGrabbedActor GrabbedActor);
+
+	UFUNCTION(BlueprintImplementableEvent, Category="VR|Hands")
+	void OnPlayerReleasedActorEvent(FGrabbedActor ReleaseActor);
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnPlayerGrabAction();
@@ -44,12 +63,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-	
-	UFUNCTION()
-	virtual void OnGrabBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	UFUNCTION()
-	virtual void OnGrabBoxEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	virtual void PostInitializeComponents() override;
 
@@ -72,15 +85,7 @@ protected:
 
 	TArray<TObjectPtr<class USplineComponent>, TInlineAllocator<5>> SplineCollisionComponents;
 
-	OptionalGraspedPair OverlappingActor;
-
-#if WITH_EDITORONLY_DATA
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR|Debug")
-	bool bFingerCollisionDebugTracing;
-#endif
-
-	UPROPERTY(BlueprintReadOnly, DisplayName="Is Grasped", Category="VR|Hands")
-	bool bIsGrasped = false;
+	TOptional<FGrabbedActor> HeldActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Motion Controller", Category="Hands")
 	TObjectPtr<UOpenXRHandMotionController> MotionControllerComponent;
@@ -153,4 +158,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Little Collision Spline", Category="VR|Hands")
 	TObjectPtr<USplineComponent> LittleCollisionSpline;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR|Debug")
+	bool bFingerCollisionDebugTracing;
+#endif
+
+	UPROPERTY(BlueprintReadOnly, DisplayName="Is Grasped", Category="VR|Hands")
+	bool bIsGrasped = false;
 };

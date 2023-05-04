@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerDefininitions.h"
+#include "PlayerDefinitions.h"
 #include "IXRTrackingSystem.h"
 
 #include "OpenXRHandMotionController.generated.h"

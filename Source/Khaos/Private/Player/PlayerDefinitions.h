@@ -18,4 +18,3 @@ const TMap<int, FString> FINGER_NAMES = {
 	{ EFingers::Little, "Little" }
 };
 
-const FName PawnBlockAllButSelf_ProfileName("PawnBlockAllButSelf");
