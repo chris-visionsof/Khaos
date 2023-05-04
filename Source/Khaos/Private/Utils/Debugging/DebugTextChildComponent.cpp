@@ -28,6 +28,11 @@ void UDebugTextChildComponent::SetLifeSpan(const float& LifeSpan)
 	ChildTextActor->SetLifeSpan(LifeSpan);
 }
 
+void UDebugTextChildComponent::SetOwner(const TObjectPtr<AActor>& NewOwner)
+{
+	ChildTextActor->SetOwner(NewOwner);
+}
+
 void UDebugTextChildComponent::SetShouldRotate(const bool& InRotate)
 {
 	ChildTextActor->SetShouldRotate(InRotate);

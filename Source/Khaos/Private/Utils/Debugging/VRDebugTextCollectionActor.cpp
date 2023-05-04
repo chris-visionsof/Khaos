@@ -24,6 +24,7 @@ const AVRDebugText* AVRDebugTextCollectionActor::DisplayDebugText(const FText& D
 	NewDebugText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Left);
 	NewDebugText->SetLifeSpan(TimeToDisplay);
 	NewDebugText->SetShouldRotate(false);
+	NewDebugText->SetOwner(GetOwner());
 	NewDebugText->OnTextChildDestroyed.AddDynamic(this, &AVRDebugTextCollectionActor::OnTextDestroyed);
 
 	for (const TTuple<TObjectPtr<AVRDebugText>, TObjectPtr<UDebugTextChildComponent>>& CurTexActor : DebugTextActors)

@@ -25,6 +25,8 @@ AVRPlayerHand::AVRPlayerHand()
 	HandRoot->SetupAttachment(MotionControllerComponent);
 
 	RootBoxCollision = CreateDefaultSubobject<UBoxComponent>("RootBoxCollision");
+	RootBoxCollision->SetCollisionProfileName(CollisionProfiles::PawnBlockAllButSelf);
+	RootBoxCollision->SetSimulatePhysics(true);
 	RootBoxCollision->SetupAttachment(HandRoot);
 
 	RootConstraint = CreateDefaultSubobject<UPhysicsConstraintComponent>("RootConstraint");

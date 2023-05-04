@@ -15,23 +15,24 @@ class KHAOS_API UDebugTextChildComponent : public UChildActorComponent
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
 	UDebugTextChildComponent();
 
 	virtual TObjectPtr<AVRDebugText> GetChildTextActor();
 
-    virtual void SetHorizontalAlignment(const EHorizTextAligment& Alignment);
-	
+	virtual void SetHorizontalAlignment(const EHorizTextAligment& Alignment);
+
 	virtual void SetLifeSpan(const float& LifeSpan);
-	
+
+	virtual void SetOwner(const TObjectPtr<AActor>& NewOwner);
+
 	virtual void SetPositionPadding(const float& Padding);
-	
+
 	virtual void SetShouldRotate(const bool& InRotate);
 
 	virtual void SetText(const FText& Text);
 
 	virtual void SetTextRenderColor(const FColor& Color);
-	
+
 	virtual void SetWorldSize(const float& Size);
 	
 	FTextChildDestroyedSignature OnTextChildDestroyed;

@@ -11,8 +11,6 @@
 
 #include "VRPlayerPawn.generated.h"
 
-typedef TOptional<TTuple<TObjectPtr<class UGrabbableComponent>, TObjectPtr<AActor>>> OptionalGraspedPair;
-
 UCLASS(ClassGroup=VR)
 class KHAOS_API AVRPlayerPawn : public APawn 
 {
@@ -35,7 +33,7 @@ protected:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Camera")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR", DisplayName="Camera")
 	TEnumAsByte<EHMDTrackingOrigin::Type> VRTrackingOrigin = EHMDTrackingOrigin::Floor;
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
@@ -43,12 +41,18 @@ protected:
 	TObjectPtr<class AVRDebugTextCollectionActor> DebugVRHud;
 #endif
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Root Movement Collision")
+	TObjectPtr<UCapsuleComponent> RootMovementCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="VR Root Position")
+	TObjectPtr<USphereComponent> VRRootPosition;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Camera")
 	TObjectPtr<UCameraComponent> CameraComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, DisplayName="Left Hand Component Type", Category="VR|Hands")
 	TSubclassOf<AVRPlayerHand> LeftHandComponentType;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, DisplayName="Left Hand", Category="VR|Hands")
 	TObjectPtr<UChildActorComponent> LeftHandComponent;
 

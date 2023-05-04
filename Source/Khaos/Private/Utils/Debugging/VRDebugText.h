@@ -30,7 +30,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="VR|Debug")
 	virtual void SetText(const FText& Text);
-	
+
 	UFUNCTION(BlueprintCallable, Category="VR|Debug")
 	virtual void SetTextRenderColor(const FColor& Color);
 	
@@ -46,8 +46,8 @@ protected:
 
 	FVector UnobstructedPosition;
 	FVector CachedHMDPos;
-    FQuat CachedHMDRot;
-    
+	FQuat CachedHMDRot;
+ 
 	float WorldSizeCache;
 	float PositionPadding = 0;
 	

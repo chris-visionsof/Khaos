@@ -6,4 +6,3 @@ namespace CollisionProfiles
 	const FName InteractiveObj("InteractiveObj");
 	const FName InteractiveTrigger("InteractiveTrigger");
 }
-

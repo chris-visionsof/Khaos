@@ -50,8 +50,9 @@ void AVRDebugText::Tick(float DeltaTime)
 		float Scale = 1.0f;
 		
 		FHitResult TraceHit;
-
-		if(World->LineTraceSingleByChannel(TraceHit, HMDData.Position, CurLoc, ECollisionChannel::ECC_WorldStatic))
+		FCollisionQueryParams QueryParams {};
+		QueryParams.AddIgnoredActor(Owner);
+		if(World->LineTraceSingleByChannel(TraceHit, HMDData.Position, CurLoc, ECollisionChannel::ECC_WorldStatic, QueryParams))
 		{
 			UnobstructedPosition = TraceHit.Location;
 			// Quick Forced Perspective

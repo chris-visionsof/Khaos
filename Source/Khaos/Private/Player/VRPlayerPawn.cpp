@@ -4,6 +4,9 @@
 
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "InputConfigData.h"
+#include "KhaosDefinitions.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
 #include "Utils/Debugging/VRDebugTextCollectionActor.h"
@@ -15,11 +18,21 @@ AVRPlayerPawn::AVRPlayerPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Default Root
-	SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("Root")));
+	RootMovementCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("RootMovementCollision"));
+	RootMovementCollision->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
+	RootMovementCollision->SetCollisionProfileName(CollisionProfiles::PawnBlockAllButSelf);
+	RootMovementCollision->InitCapsuleSize(35.0f, 90.0f);
+	AddInstanceComponent(RootMovementCollision);
+	SetRootComponent(RootMovementCollision);
+
+	VRRootPosition = CreateDefaultSubobject<USphereComponent>(TEXT("VRRootPosition"));
+	VRRootPosition->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	VRRootPosition->SetSphereRadius(16.0f, false);
+	VRRootPosition->SetupAttachment(RootMovementCollision);
+	VRRootPosition->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComponent->SetupAttachment(GetRootComponent());
+	CameraComponent->SetupAttachment(VRRootPosition);
 }
 
 // Called when the game starts or when spawned
@@ -41,6 +54,7 @@ void AVRPlayerPawn::BeginPlay()
 	DebugVRHudComp->SetRelativeRotation(FRotator(0.0f, 180.0, 0.0f));
 	DebugVRHudComp->SetRelativeLocation(FVector(40.0f, -15.0f, -15.0f));
 	DebugVRHud = Cast<AVRDebugTextCollectionActor>(DebugVRHudComp->GetChildActor());
+	DebugVRHud->SetOwner(this);
 	DebugVRHud->SetGeneralWorldSize(2.0f);
 #endif
 
@@ -49,8 +63,9 @@ void AVRPlayerPawn::BeginPlay()
 		HandToSetup = NewObject<UChildActorComponent>(this, (bIsRight ? "RightHand": "LeftHand"));
 		HandToSetup->SetChildActorClass((bIsRight ? RightHandComponentType : LeftHandComponentType));
 		HandToSetup->RegisterComponent();
-		HandToSetup->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+		HandToSetup->AttachToComponent(VRRootPosition, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		ActorRef = Cast<AVRPlayerHand>(HandToSetup->GetChildActor());
+		ActorRef->SetOwner(this);
 	};
 
 	HandSetupFunc(RightHandComponent, RightHandActor);
