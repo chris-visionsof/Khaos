@@ -104,7 +104,7 @@ void AVRPlayerHand::OnPlayerGrabAction()
 
 	TArray<UPrimitiveComponent*> OverlappingComps;
 	GrabOverlapBox->GetOverlappingComponents(OverlappingComps);
-	for (UPrimitiveComponent* OverlappingComp : OverlappingComps)
+	for (const UPrimitiveComponent* OverlappingComp : OverlappingComps)
 	{
 		// TODO: Probably shouldn't default to the root. Should probably take the grabbable component and go up the parent tree
 		AActor* OwningActor = OverlappingComp->GetOwner();
@@ -119,9 +119,9 @@ void AVRPlayerHand::OnPlayerGrabAction()
 
 			auto GrabbedTrans = RootPrimitive->GetComponentTransform();
 			GrabbedTrans.SetScale3D(FVector::One());
-			
+
 			HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive, GrabbedTrans.InverseTransformPosition(GrabConstraint->GetComponentLocation()) });
-			//OnPlayerGrabbedActorEvent(HeldActor.GetValue());
+
 			break;
 		}
 	}
@@ -143,14 +143,12 @@ void AVRPlayerHand::Tick(float DeltaSeconds)
 
 	FingerCollisionRangeTargetPercentages = MotionControllerComponent->FingerRangePercentages;
 
-	int FingersGrasped = 0;
-
 	for (int fingerIndex = 0; fingerIndex < 5; ++fingerIndex)
 	{
 		TArray<FVector, TInlineAllocator<5>> CurrentFingerCollisionPositions = FingerCollisionPositions[fingerIndex];
-		float MotionControlFingerPercentage = MotionControllerComponent->FingerRangePercentages[fingerIndex];
+		float CurrentMotionControlFingerPercentage = MotionControllerComponent->FingerRangePercentages[fingerIndex];
 
-		if(bFingerCollisionDebugTracing || MotionControlFingerPercentage > 0.05)
+		if(bFingerCollisionDebugTracing || CurrentMotionControlFingerPercentage > 0.05)
 		{
 			float FingerTraceLength = 0;
 
@@ -174,20 +172,26 @@ void AVRPlayerHand::Tick(float DeltaSeconds)
 				{
 					FingerTraceLength += FVector::Distance(TraceStart, Hit.Location);
 
+					float TraceFingerPercentage = FingerTraceLength / FingerSplineTotalRanges[fingerIndex];
+					if(CurrentMotionControlFingerPercentage > TraceFingerPercentage)
+					{
+						FingerCollisionRangeTargetPercentages[fingerIndex] = TraceFingerPercentage + FingerCollisionOvershoot;
+
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+						if(bFingerCollisionDebugTracing)
+						{
+							DrawDebugPoint(GetWorld(), Hit.Location, 20, FColor::Red, bPERSISTENT_LINES, DEBUG_LIFE_TIME, DEPTH_PRIORITY);
+						}
+#endif
+					}
+
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 					if(bFingerCollisionDebugTracing)
 					{
-						DrawDebugPoint(GetWorld(), Hit.Location, 15, FColor::Black, bPERSISTENT_LINES, DEBUG_LIFE_TIME, DEPTH_PRIORITY);
+						DrawDebugPoint(GetWorld(), Hit.Location, 13, FColor::Black, bPERSISTENT_LINES, DEBUG_LIFE_TIME, DEPTH_PRIORITY);
 					}
 #endif
 
-					float TraceFingerPercentage = FingerTraceLength / FingerSplineTotalRanges[fingerIndex];
-					if(MotionControlFingerPercentage > TraceFingerPercentage)
-					{
-						++FingersGrasped;
-
-						FingerCollisionRangeTargetPercentages[fingerIndex] = TraceFingerPercentage + FingerCollisionOvershoot;
-					}
 					break;
 				}
 

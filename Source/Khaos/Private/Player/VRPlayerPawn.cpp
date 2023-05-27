@@ -84,27 +84,28 @@ void AVRPlayerPawn::DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay,
 	DisplayDebugText(DebugMessage, TimeToDisplay, DisplayColor);
 }
 
-void AVRPlayerPawn::OnPlayerGrabAction(const FInputActionValue&, bool bRight) 
+void AVRPlayerPawn::OnPlayerFingerTouchAction(const FInputActionValue& ActionValue, bool bRight, EFingers FingerTouched) 
 {
-	if(bRight)
-	{
-		RightHandActor->OnPlayerGrabAction();
-	}
-	else
-	{
-		LeftHandActor->OnPlayerGrabAction();
-	}
-}
+	constexpr static int32 Mask = (EFingers::Index | EFingers::Thumb);
+	int32& Fingers = bRight ? RightFingersTouched : LeftFingersTouched;
+	const TObjectPtr<AVRPlayerHand> HandActor = bRight ? RightHandActor : LeftHandActor;
 
-void AVRPlayerPawn::OnPlayerReleaseAction(const FInputActionValue& Value, bool bRight)
-{
-	if(bRight)
+	if(ActionValue.Get<bool>())
 	{
-		RightHandActor->OnPlayerReleaseAction();
+		Fingers |= FingerTouched;
 	}
 	else
 	{
-		LeftHandActor->OnPlayerReleaseAction();
+		Fingers &= ~FingerTouched;
+	}
+
+	if(HandActor->IsGrasped() && ((Fingers & Mask) != Mask))
+	{
+ 		HandActor->OnPlayerReleaseAction();
+	}
+	else if(!HandActor->IsGrasped() && ((Fingers & Mask) == Mask))
+	{
+		HandActor->OnPlayerGrabAction();
 	}
 }
 
@@ -118,10 +119,16 @@ void AVRPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
  
 	// Get the EnhancedInputComponent
 	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	PEI->BindAction(InputActions->InputGrab_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, true);
-	PEI->BindAction(InputActions->InputGrab_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerGrabAction, false);
-	PEI->BindAction(InputActions->InputGrab_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerReleaseAction, true);
-	PEI->BindAction(InputActions->InputGrab_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerReleaseAction, false);
+
+	PEI->BindAction(InputActions->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
+	PEI->BindAction(InputActions->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
+	PEI->BindAction(InputActions->ThumbTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
+	PEI->BindAction(InputActions->ThumbTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
+
+	PEI->BindAction(InputActions->IndexTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
+	PEI->BindAction(InputActions->IndexTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
+	PEI->BindAction(InputActions->IndexTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
+	PEI->BindAction(InputActions->IndexTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
 }
 
 

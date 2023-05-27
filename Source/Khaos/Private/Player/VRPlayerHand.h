@@ -34,6 +34,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category="VR|Hands")
 	bool GetHeldActor(FGrabbedActor& GrabbedActorOut);
 	
+	[[nodiscard]] bool IsGrasped() const { 	return bIsGrasped; }
+	
 	UFUNCTION(BlueprintImplementableEvent, Category="VR|Hands")
 	void OnPlayerGrabbedActorEvent(FGrabbedActor GrabbedActor);
 
@@ -166,4 +168,5 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, DisplayName="Is Grasped", Category="VR|Hands")
 	bool bIsGrasped = false;
+
 };

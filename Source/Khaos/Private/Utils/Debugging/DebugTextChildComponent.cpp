@@ -53,6 +53,7 @@ void UDebugTextChildComponent::SetPositionPadding(const float& Padding)
 	ChildTextActor->SetPositionPadding(Padding);
 }
 
+
 void UDebugTextChildComponent::OnRegister()
 {
 	Super::OnRegister();

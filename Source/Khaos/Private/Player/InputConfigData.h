@@ -16,8 +16,14 @@ class KHAOS_API UInputConfigData : public UDataAsset
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UInputAction> InputGrab_R;
+	TObjectPtr<UInputAction> ThumbTouch_R;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UInputAction> InputGrab_L;
+	TObjectPtr<UInputAction> ThumbTouch_L;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UInputAction> IndexTouch_R;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UInputAction> IndexTouch_L;
 };

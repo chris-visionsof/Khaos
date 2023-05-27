@@ -27,9 +27,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="VR|Debug", DisplayName="Display Debug Text", meta=(AdvancedDisplay=1))
 	virtual void DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay=5.0f, FColor DisplayColor=FColor::Red);
 
-	void OnPlayerGrabAction(const FInputActionValue& Value, bool bRight);
-
-	void OnPlayerReleaseAction(const FInputActionValue& Value, bool bRight);
+	void OnPlayerFingerTouchAction(const FInputActionValue& Value, bool bRight, EFingers FingerTouched);
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -73,4 +71,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<UInputConfigData> InputActions;
+
+	UPROPERTY(BlueprintReadOnly, meta=(Bitmask, BitmaskEnum = EFingers))
+	int32 RightFingersTouched;
+
+	UPROPERTY(BlueprintReadOnly, meta=(Bitmask, BitmaskEnum = EFingers))
+	int32 LeftFingersTouched;
 };
