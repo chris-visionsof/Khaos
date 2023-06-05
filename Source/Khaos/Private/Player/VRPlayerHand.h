@@ -18,9 +18,6 @@ struct FGrabbedActor
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UPrimitiveComponent> GrabbedComponent;
-
-	UPROPERTY(BlueprintReadOnly)
-	FVector LocalGrabLocation;
 };
 
 UCLASS(ClassGroup=VR)
@@ -33,9 +30,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="VR|Hands")
 	bool GetHeldActor(FGrabbedActor& GrabbedActorOut);
-	
+
 	[[nodiscard]] bool IsGrasped() const { 	return bIsGrasped; }
-	
+
 	UFUNCTION(BlueprintImplementableEvent, Category="VR|Hands")
 	void OnPlayerGrabbedActorEvent(FGrabbedActor GrabbedActor);
 
@@ -44,7 +41,7 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	virtual void OnPlayerGrabAction();
-	
+
 	UFUNCTION(BlueprintCallable)
 	virtual void OnPlayerReleaseAction();
 

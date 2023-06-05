@@ -110,17 +110,13 @@ void AVRPlayerHand::OnPlayerGrabAction()
 		AActor* OwningActor = OverlappingComp->GetOwner();
 		if(const auto RootPrimitive = Cast<UPrimitiveComponent>(OwningActor->GetRootComponent()))
 		{
-			GrabConstraint->OverrideComponent2 = SkeletalMeshComponent;
-			GrabConstraint->ComponentName2 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
 			GrabConstraint->OverrideComponent1 = RootPrimitive;
 			GrabConstraint->ComponentName1 = FConstrainComponentPropName { RootPrimitive->GetFName() };
+			GrabConstraint->OverrideComponent2 = SkeletalMeshComponent;
+			GrabConstraint->ComponentName2 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
 			GrabConstraint->InitComponentConstraint();
 			bIsGrasped = true;
-
-			auto GrabbedTrans = RootPrimitive->GetComponentTransform();
-			GrabbedTrans.SetScale3D(FVector::One());
-
-			HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive, GrabbedTrans.InverseTransformPosition(GrabConstraint->GetComponentLocation()) });
+			HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive });
 
 			break;
 		}
