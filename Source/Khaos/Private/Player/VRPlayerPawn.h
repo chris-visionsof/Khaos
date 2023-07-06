@@ -7,12 +7,13 @@
 #include "GameFramework/Pawn.h"
 #include "OpenXRHandMotionController.h"
 #include "InputConfigData.h"
+#include "KhaosBasePawn.h"
 #include "VRPlayerHand.h"
 
 #include "VRPlayerPawn.generated.h"
 
 UCLASS(ClassGroup=VR)
-class KHAOS_API AVRPlayerPawn : public APawn 
+class KHAOS_API AVRPlayerPawn : public AKhaosBasePawn 
 {
 	GENERATED_BODY()
 
@@ -38,9 +39,6 @@ protected:
 	TObjectPtr<UChildActorComponent> DebugVRHudComp;
 	TObjectPtr<class AVRDebugTextCollectionActor> DebugVRHud;
 #endif
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Root Movement Collision")
-	TObjectPtr<UCapsuleComponent> RootMovementCollision;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="VR Root Position")
 	TObjectPtr<USphereComponent> VRRootPosition;

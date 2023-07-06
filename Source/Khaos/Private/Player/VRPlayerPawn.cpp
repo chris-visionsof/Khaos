@@ -18,17 +18,10 @@ AVRPlayerPawn::AVRPlayerPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	RootMovementCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("RootMovementCollision"));
-	RootMovementCollision->CanCharacterStepUpOn = ECanBeCharacterBase::ECB_No;
-	RootMovementCollision->SetCollisionProfileName(CollisionProfiles::PawnBlockAllButSelf);
-	RootMovementCollision->InitCapsuleSize(35.0f, 90.0f);
-	AddInstanceComponent(RootMovementCollision);
-	SetRootComponent(RootMovementCollision);
-
 	VRRootPosition = CreateDefaultSubobject<USphereComponent>(TEXT("VRRootPosition"));
 	VRRootPosition->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 	VRRootPosition->SetSphereRadius(16.0f, false);
-	VRRootPosition->SetupAttachment(RootMovementCollision);
+	VRRootPosition->SetupAttachment(RootComponent);
 	VRRootPosition->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
