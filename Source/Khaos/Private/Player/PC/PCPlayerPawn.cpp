@@ -27,6 +27,22 @@ void APCPlayerPawn::OnPlayerLookAndMotionAction(const FInputActionValue& Value)
 	}
 }
 
+void APCPlayerPawn::OnPlayerXMovementAction(bool bForward)
+{
+	if (Controller != nullptr)
+	{
+		AddMovementInput(GetActorForwardVector(), (bForward ? KeyboardInputMovementValue : (KeyboardInputMovementValue * -1)));
+	}
+}
+
+void APCPlayerPawn::OnPlayerYMovementAction(bool bRight)
+{
+	if (Controller != nullptr)
+	{
+		AddMovementInput(GetActorRightVector(), (bRight ? KeyboardInputMovementValue : (KeyboardInputMovementValue * -1)));
+	}
+}
+
 void APCPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent)
 {
 	Super::SetupEnhancedPlayerInput(EnhancedInputSubsystem, PlayerInputComponent);
@@ -34,6 +50,10 @@ void APCPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem*
 	EnhancedInputSubsystem->AddMappingContext(PCInputConfig->PCMappingContext, 1);
  
 	PlayerInputComponent->BindAction(PCInputConfig->LookAndMotion.Get(), ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerLookAndMotionAction);
+	PlayerInputComponent->BindAction(PCInputConfig->MoveForward, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerXMovementAction, true);
+	PlayerInputComponent->BindAction(PCInputConfig->MoveBackward, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerXMovementAction, false);
+	PlayerInputComponent->BindAction(PCInputConfig->StrifeRight, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerYMovementAction, true);
+	PlayerInputComponent->BindAction(PCInputConfig->StrifeLeft, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerYMovementAction, false);
 }
 
 

@@ -18,8 +18,14 @@ public:
 protected:
 	virtual void OnPlayerLookAndMotionAction(const struct FInputActionValue& Value);
 
+	virtual void OnPlayerXMovementAction(bool bForward);
+	virtual void OnPlayerYMovementAction(bool bRight);
+
 	void virtual SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<class UPCInputDataConfig> PCInputConfig;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	float KeyboardInputMovementValue = 1;
 };
