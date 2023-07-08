@@ -3,12 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/Pawn.h"
 #include "OpenXRHandMotionController.h"
-#include "InputConfigData.h"
-#include "KhaosBasePawn.h"
 #include "VRPlayerHand.h"
+#include "Player/KhaosBasePawn.h"
 
 #include "VRPlayerPawn.generated.h"
 
@@ -30,7 +28,7 @@ protected:
 
 	void OnPlayerFingerTouchAction(const FInputActionValue& Value, bool bRight, EFingers FingerTouched);
 
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR", DisplayName="Camera")
 	TEnumAsByte<EHMDTrackingOrigin::Type> VRTrackingOrigin = EHMDTrackingOrigin::Floor;
@@ -42,9 +40,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="VR Root Position")
 	TObjectPtr<USphereComponent> VRRootPosition;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName="Camera")
-	TObjectPtr<UCameraComponent> CameraComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, DisplayName="Left Hand Component Type", Category="VR|Hands")
 	TSubclassOf<AVRPlayerHand> LeftHandComponentType;
@@ -65,10 +60,7 @@ protected:
 	TObjectPtr<AVRPlayerHand> RightHandActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	TObjectPtr<class UInputMappingContext> InputMappingContext;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	TObjectPtr<UInputConfigData> InputActions;
+	TObjectPtr<class UVRInputConfigData> VRInputConfig;
 
 	UPROPERTY(BlueprintReadOnly, meta=(Bitmask, BitmaskEnum = EFingers))
 	int32 RightFingersTouched;

@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerDefinitions.h"
 #include "IXRTrackingSystem.h"
+#include "Player/PlayerDefinitions.h"
 
 #include "OpenXRHandMotionController.generated.h"
 
@@ -43,8 +43,11 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable, Category="VR")
+	virtual FTransform GetIndexFingerTipPosition();
+
 	/** Called when the motion controller data has updated */
-	UPROPERTY(BlueprintAssignable, Category = "VR")
+	UPROPERTY(BlueprintAssignable, Category="VR")
 	FOnMotionControllerUpdated OnMotionControllerUpdate;
 
 	/** Is the controller tracked on the right side? */
@@ -55,7 +58,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	virtual bool CalculateGrasped();
+	virtual bool CalculateFingers();
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	virtual void RenderDebugAxes();
@@ -80,6 +83,9 @@ protected:
 	/** The percentage that each finger is within of it's flexed range  **/
 	UPROPERTY(BlueprintReadOnly, Category="VR")
 	TArray<float> FingerRangePercentages = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR")
+	FVector IndexPositionOffset;
 
 #if WITH_EDITORONLY_DATA
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="VR|Debug")

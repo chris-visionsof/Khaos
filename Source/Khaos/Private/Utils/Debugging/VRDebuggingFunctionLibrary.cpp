@@ -4,7 +4,9 @@
 #include "VRDebuggingFunctionLibrary.h"
 
 #include "Kismet/GameplayStatics.h"
-#include "Player/VRPlayerPawn.h"
+#include "Player/VR/VRPlayerPawn.h"
+
+class AVRPlayerPawn;
 
 namespace 
 {

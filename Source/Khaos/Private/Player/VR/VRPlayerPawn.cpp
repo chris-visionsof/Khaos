@@ -3,18 +3,15 @@
 #include "VRPlayerPawn.h"
 
 #include "HeadMountedDisplayFunctionLibrary.h"
-#include "InputConfigData.h"
-#include "KhaosDefinitions.h"
-#include "Components/CapsuleComponent.h"
+#include "VRInputConfigData.h"
+#include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
-#include "Engine/LocalPlayer.h"
-#include "GameFramework/PlayerController.h"
 #include "Utils/Debugging/VRDebugTextCollectionActor.h"
 #include "EnhancedInput/Public/EnhancedInputComponent.h"
 #include "EnhancedInput/Public/EnhancedInputSubsystems.h"
 
 // Sets default values
-AVRPlayerPawn::AVRPlayerPawn()
+AVRPlayerPawn::AVRPlayerPawn() : AKhaosBasePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -24,8 +21,7 @@ AVRPlayerPawn::AVRPlayerPawn()
 	VRRootPosition->SetupAttachment(RootComponent);
 	VRRootPosition->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComponent->SetupAttachment(VRRootPosition);
+	FirstPersonCamera->SetupAttachment(VRRootPosition);
 }
 
 // Called when the game starts or when spawned
@@ -36,14 +32,14 @@ void AVRPlayerPawn::BeginPlay()
 	if(UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
 	{
 		UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(VRTrackingOrigin);
-		CameraComponent->bLockToHmd = true;
+		FirstPersonCamera->bLockToHmd = true;
 	}
 
 #if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
 	DebugVRHudComp = NewObject<UChildActorComponent>(this,"VRDebugHUD");
 	DebugVRHudComp->SetChildActorClass(AVRDebugTextCollectionActor::StaticClass());
 	DebugVRHudComp->RegisterComponent();
-	DebugVRHudComp->AttachToComponent(CameraComponent, FAttachmentTransformRules::KeepRelativeTransform);
+	DebugVRHudComp->AttachToComponent(FirstPersonCamera, FAttachmentTransformRules::KeepRelativeTransform);
 	DebugVRHudComp->SetRelativeRotation(FRotator(0.0f, 180.0, 0.0f));
 	DebugVRHudComp->SetRelativeLocation(FVector(40.0f, -15.0f, -15.0f));
 	DebugVRHud = Cast<AVRDebugTextCollectionActor>(DebugVRHudComp->GetChildActor());
@@ -102,26 +98,21 @@ void AVRPlayerPawn::OnPlayerFingerTouchAction(const FInputActionValue& ActionVal
 	}
 }
 
-void AVRPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AVRPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent)
 {
-	APlayerController* PC = Cast<APlayerController>(GetController());
- 
-	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer());
-	Subsystem->ClearAllMappings();
-	Subsystem->AddMappingContext(InputMappingContext, 0);
- 
-	// Get the EnhancedInputComponent
-	UEnhancedInputComponent* PEI = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	Super::SetupEnhancedPlayerInput(EnhancedInputSubsystem, PlayerInputComponent);
 
-	PEI->BindAction(InputActions->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
-	PEI->BindAction(InputActions->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
-	PEI->BindAction(InputActions->ThumbTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
-	PEI->BindAction(InputActions->ThumbTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
+	EnhancedInputSubsystem->AddMappingContext(VRInputConfig->VRMappingContext, 1);
+ 
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
 
-	PEI->BindAction(InputActions->IndexTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
-	PEI->BindAction(InputActions->IndexTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
-	PEI->BindAction(InputActions->IndexTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
-	PEI->BindAction(InputActions->IndexTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
 }
 
 

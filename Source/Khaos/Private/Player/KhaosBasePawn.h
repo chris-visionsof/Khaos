@@ -7,7 +7,7 @@
 #include "GameFramework/Pawn.h"
 #include "KhaosBasePawn.generated.h"
 
-UCLASS()
+UCLASS(Abstract)
 class KHAOS_API AKhaosBasePawn : public ACharacter 
 {
 	GENERATED_BODY()
@@ -18,4 +18,17 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+protected:
+	virtual void OnPlayerMovementAction(const struct FInputActionValue& Value);
+
+	virtual void SetupEnhancedPlayerInput(class UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, class UEnhancedInputComponent* PlayerInputComponent);
+
+	TObjectPtr<UCapsuleComponent> BaseCollision;  
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UCameraComponent> FirstPersonCamera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
+	TObjectPtr<class UInputConfigData> DefaultInputConfig;
 };

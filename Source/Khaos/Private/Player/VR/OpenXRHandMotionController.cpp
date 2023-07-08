@@ -30,6 +30,58 @@ UOpenXRHandMotionController::UOpenXRHandMotionController()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
+FTransform UOpenXRHandMotionController::GetIndexFingerTipPosition()
+{
+	const TTuple<int32, int32> CurFingerIndex = FINGER_INDEXES[EFingers::Index];
+
+	if(CurrentHandControllerDataCache.HandKeyRotations.IsEmpty())
+	{
+		return FTransform();
+	}
+
+	const UE::Math::TQuat<double> Rotation = CurrentHandControllerDataCache.HandKeyRotations[CurFingerIndex.Value];
+	const FVector Position = CurrentHandControllerDataCache.HandKeyPositions[CurFingerIndex.Value] + Rotation.RotateVector(IndexPositionOffset);
+
+	return FTransform(Rotation,Position);
+}
+
+void UOpenXRHandMotionController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	checkf(TrackingSystem, TEXT("Tracking sysstem should not be null for a VR game"));
+
+	TrackingSystem->GetMotionControllerData(GetWorld(), bRight ? EControllerHand::Right : EControllerHand::Left, CurrentHandControllerDataCache);
+	
+	if (!CurrentHandControllerDataCache.bValid) { return; }
+	
+	SetWorldTransform(FTransform(
+		CurrentHandControllerDataCache.GripRotation.GetNormalized(),
+		CurrentHandControllerDataCache.GripPosition,
+		FVector(1.0f, 1.0f, 1.0f)));
+
+	if(OnMotionControllerUpdate.IsBound())
+	{
+		OnMotionControllerUpdate.Broadcast(this, CurrentHandControllerDataCache);
+	}
+
+	CalculateFingers();
+
+#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+	if(bRenderDebugAxes)
+	{
+		RenderDebugAxes();
+	}
+
+	if(bRenderDebugHand)
+	{
+		RenderDebugHand();
+	}
+#endif
+}
+
+
+
 void UOpenXRHandMotionController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -52,7 +104,7 @@ void UOpenXRHandMotionController::BeginPlay()
 #endif
 }
 
-bool UOpenXRHandMotionController::CalculateGrasped()
+bool UOpenXRHandMotionController::CalculateFingers()
 {
 	for (int i = 0; i < FINGER_INDEXES.Num(); ++i)
 	{
@@ -131,39 +183,4 @@ void UOpenXRHandMotionController::RenderDebugHand()
 	}
 }
 #endif
-
-void UOpenXRHandMotionController::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	checkf(TrackingSystem, TEXT("Tracking sysstem should not be null for a VR game"));
-
-	TrackingSystem->GetMotionControllerData(GetWorld(), bRight ? EControllerHand::Right : EControllerHand::Left, CurrentHandControllerDataCache);
-	
-	if (!CurrentHandControllerDataCache.bValid) { return; }
-	
-	SetWorldTransform(FTransform(
-		CurrentHandControllerDataCache.GripRotation.GetNormalized(),
-		CurrentHandControllerDataCache.GripPosition,
-		FVector(1.0f, 1.0f, 1.0f)));
-
-	if(OnMotionControllerUpdate.IsBound())
-	{
-		OnMotionControllerUpdate.Broadcast(this, CurrentHandControllerDataCache);
-	}
-
-	CalculateGrasped();
-
-#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-	if(bRenderDebugAxes)
-	{
-		RenderDebugAxes();
-	}
-
-	if(bRenderDebugHand)
-	{
-		RenderDebugHand();
-	}
-#endif
-}
 
