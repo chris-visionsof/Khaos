@@ -12,20 +12,38 @@ class KHAOS_API APCPlayerPawn : public AKhaosBasePawn
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this character's properties
 	APCPlayerPawn();
 
-protected:
-	virtual void OnPlayerLookAndMotionAction(const struct FInputActionValue& Value);
+	virtual void Tick(float DeltaSeconds) override;
 
-	virtual void OnPlayerXMovementAction(bool bForward);
-	virtual void OnPlayerYMovementAction(bool bRight);
+protected:
+	virtual void OnPlayerLookAndMotionInput(const struct FInputActionValue& Value);
+
+	virtual void OnPlayerMovementInput(bool bReverse, UE::Math::TVector<double>(AActor::*VectorFunc)() const);
+
+	virtual void OnPlayerPerformActionInput();
+
+	virtual void OnPlayerPerformActionInputRelease();
 
 	void virtual SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent) override;
+
+	UPROPERTY(EditAnywhere, Category="Interactivity")
+	TObjectPtr<class USceneComponent> PhysicsHandleGrabReference;
+
+	UPROPERTY(EditAnywhere, Category="Interactivity")
+	TObjectPtr<class UPhysicsHandleComponent> PhysicsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	TObjectPtr<class UPCInputDataConfig> PCInputConfig;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interactivity")
+	double ActionableItemTraceLength = 500.0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
 	float KeyboardInputMovementValue = 1;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Debug")
+	bool DebugTrace = false;
+#endif
 };

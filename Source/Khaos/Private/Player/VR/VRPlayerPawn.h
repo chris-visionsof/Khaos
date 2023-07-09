@@ -26,7 +26,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="VR|Debug", DisplayName="Display Debug Text", meta=(AdvancedDisplay=1))
 	virtual void DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay=5.0f, FColor DisplayColor=FColor::Red);
 
-	void OnPlayerFingerTouchAction(const FInputActionValue& Value, bool bRight, EFingers FingerTouched);
+	void OnPlayerFingerTouchInput(const FInputActionValue& Value, bool bRight, EFingers FingerTouched);
 
 	virtual void SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent) override;
 

@@ -73,7 +73,7 @@ void AVRPlayerPawn::DisplayDebugText_BP(FText DebugMessage, float TimeToDisplay,
 	DisplayDebugText(DebugMessage, TimeToDisplay, DisplayColor);
 }
 
-void AVRPlayerPawn::OnPlayerFingerTouchAction(const FInputActionValue& ActionValue, bool bRight, EFingers FingerTouched) 
+void AVRPlayerPawn::OnPlayerFingerTouchInput(const FInputActionValue& ActionValue, bool bRight, EFingers FingerTouched) 
 {
 	constexpr static int32 Mask = (EFingers::Index | EFingers::Thumb);
 	int32& Fingers = bRight ? RightFingersTouched : LeftFingersTouched;
@@ -104,15 +104,15 @@ void AVRPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem*
 
 	EnhancedInputSubsystem->AddMappingContext(VRInputConfig->VRMappingContext, 1);
  
-	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
-	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
-	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Thumb);
-	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, true, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, false, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, true, EFingers::Thumb);
+	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, false, EFingers::Thumb);
 
-	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
-	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
-	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, true, EFingers::Index);
-	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchAction, false, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, true, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, false, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_R.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, true, EFingers::Index);
+	PlayerInputComponent->BindAction(VRInputConfig->IndexTouch_L.Get(), ETriggerEvent::Completed, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, false, EFingers::Index);
 }
 
 
