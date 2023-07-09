@@ -1,15 +1,15 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "PCPlayerPawn.h"
+#include "FirstPersonPlayerPawn.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
-#include "PCInputDataConfig.h"
+#include "FirstPersonInputDataConfig.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 
-APCPlayerPawn::APCPlayerPawn() : AKhaosBasePawn()
+AFirstPersonPlayerPawn::AFirstPersonPlayerPawn() : AKhaosBasePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -23,7 +23,7 @@ APCPlayerPawn::APCPlayerPawn() : AKhaosBasePawn()
 	PhysicsHandle = CreateDefaultSubobject<UPhysicsHandleComponent>("PhysicsHandle");
 }
 
-void APCPlayerPawn::Tick(float DeltaSeconds)
+void AFirstPersonPlayerPawn::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -33,7 +33,7 @@ void APCPlayerPawn::Tick(float DeltaSeconds)
 	}
 }
 
-void APCPlayerPawn::OnPlayerLookAndMotionInput(const FInputActionValue& Value)
+void AFirstPersonPlayerPawn::OnPlayerLookAndMotionInput(const FInputActionValue& Value)
 {
 	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
@@ -44,7 +44,7 @@ void APCPlayerPawn::OnPlayerLookAndMotionInput(const FInputActionValue& Value)
 	}
 }
 
-void APCPlayerPawn::OnPlayerMovementInput(bool bReverse, UE::Math::TVector<double>(AActor::*VectorFunc)() const)
+void AFirstPersonPlayerPawn::OnPlayerMovementInput(bool bReverse, UE::Math::TVector<double>(AActor::*VectorFunc)() const)
 {
 	if (Controller != nullptr)
 	{
@@ -52,7 +52,7 @@ void APCPlayerPawn::OnPlayerMovementInput(bool bReverse, UE::Math::TVector<doubl
 	}
 }
 
-void APCPlayerPawn::OnPlayerPerformActionInput()
+void AFirstPersonPlayerPawn::OnPlayerPerformActionInput()
 {
 	if(PhysicsHandle->GrabbedComponent) { return; }
 
@@ -84,7 +84,7 @@ void APCPlayerPawn::OnPlayerPerformActionInput()
 	}
 }
 
-void APCPlayerPawn::OnPlayerPerformActionInputRelease()
+void AFirstPersonPlayerPawn::OnPlayerPerformActionInputRelease()
 {
 	if(PhysicsHandle->GrabbedComponent)
 	{
@@ -92,20 +92,20 @@ void APCPlayerPawn::OnPlayerPerformActionInputRelease()
 	}
 }
 
-void APCPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent)
+void AFirstPersonPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem* EnhancedInputSubsystem, UEnhancedInputComponent* PlayerInputComponent)
 {
 	Super::SetupEnhancedPlayerInput(EnhancedInputSubsystem, PlayerInputComponent);
 
-	EnhancedInputSubsystem->AddMappingContext(PCInputConfig->PCMappingContext, 1);
+	EnhancedInputSubsystem->AddMappingContext(FirstPersonInputConfig->MappingContext, 1);
 
-	PlayerInputComponent->BindAction(PCInputConfig->LookAndMotion.Get(), ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerLookAndMotionInput);
-	PlayerInputComponent->BindAction(PCInputConfig->MoveForward, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerMovementInput, true, &AActor::GetActorForwardVector);
-	PlayerInputComponent->BindAction(PCInputConfig->MoveBackward, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerMovementInput, false, &AActor::GetActorForwardVector);
-	PlayerInputComponent->BindAction(PCInputConfig->StrifeRight, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerMovementInput, true, &AActor::GetActorRightVector);
-	PlayerInputComponent->BindAction(PCInputConfig->StrifeLeft, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerMovementInput, false, &AActor::GetActorRightVector);
-	PlayerInputComponent->BindAction(PCInputConfig->PerformAction, ETriggerEvent::Triggered, this, &APCPlayerPawn::OnPlayerPerformActionInput);
-	PlayerInputComponent->BindAction(PCInputConfig->PerformAction, ETriggerEvent::Completed, this, &APCPlayerPawn::OnPlayerPerformActionInputRelease);
-	PlayerInputComponent->BindAction(PCInputConfig->PerformAction, ETriggerEvent::Canceled, this, &APCPlayerPawn::OnPlayerPerformActionInputRelease);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->LookAndMotion.Get(), ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerLookAndMotionInput);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->MoveForward, ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerMovementInput, true, &AActor::GetActorForwardVector);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->MoveBackward, ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerMovementInput, false, &AActor::GetActorForwardVector);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->StrifeRight, ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerMovementInput, true, &AActor::GetActorRightVector);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->StrifeLeft, ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerMovementInput, false, &AActor::GetActorRightVector);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->PerformAction, ETriggerEvent::Triggered, this, &AFirstPersonPlayerPawn::OnPlayerPerformActionInput);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->PerformAction, ETriggerEvent::Completed, this, &AFirstPersonPlayerPawn::OnPlayerPerformActionInputRelease);
+	PlayerInputComponent->BindAction(FirstPersonInputConfig->PerformAction, ETriggerEvent::Canceled, this, &AFirstPersonPlayerPawn::OnPlayerPerformActionInputRelease);
 }
 
 

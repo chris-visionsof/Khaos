@@ -102,7 +102,7 @@ void AVRPlayerPawn::SetupEnhancedPlayerInput(UEnhancedInputLocalPlayerSubsystem*
 {
 	Super::SetupEnhancedPlayerInput(EnhancedInputSubsystem, PlayerInputComponent);
 
-	EnhancedInputSubsystem->AddMappingContext(VRInputConfig->VRMappingContext, 1);
+	EnhancedInputSubsystem->AddMappingContext(VRInputConfig->MappingContext, 1);
  
 	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_R.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, true, EFingers::Thumb);
 	PlayerInputComponent->BindAction(VRInputConfig->ThumbTouch_L.Get(), ETriggerEvent::Triggered, this, &AVRPlayerPawn::OnPlayerFingerTouchInput, false, EFingers::Thumb);

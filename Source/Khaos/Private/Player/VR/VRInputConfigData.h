@@ -16,7 +16,7 @@ class KHAOS_API UVRInputConfigData : public UDataAsset
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<UInputMappingContext> VRMappingContext;
+	TObjectPtr<UInputMappingContext> MappingContext;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UInputAction> ThumbTouch_R;

@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Player/KhaosBasePawn.h"
-#include "PCPlayerPawn.generated.h"
+#include "FirstPersonPlayerPawn.generated.h"
 
 UCLASS()
-class KHAOS_API APCPlayerPawn : public AKhaosBasePawn
+class KHAOS_API AFirstPersonPlayerPawn : public AKhaosBasePawn
 {
 	GENERATED_BODY()
 
 public:
-	APCPlayerPawn();
+	AFirstPersonPlayerPawn();
 
 	virtual void Tick(float DeltaSeconds) override;
 
@@ -34,7 +34,7 @@ protected:
 	TObjectPtr<class UPhysicsHandleComponent> PhysicsHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Input")
-	TObjectPtr<class UPCInputDataConfig> PCInputConfig;
+	TObjectPtr<class UFirstPersonInputDataConfig> FirstPersonInputConfig;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Interactivity")
 	double ActionableItemTraceLength = 500.0;

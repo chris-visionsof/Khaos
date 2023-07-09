@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "PCInputDataConfig.generated.h"
+#include "FirstPersonInputDataConfig.generated.h"
 
 UCLASS()
-class KHAOS_API UPCInputDataConfig : public UDataAsset
+class KHAOS_API UFirstPersonInputDataConfig : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TObjectPtr<class UInputMappingContext> PCMappingContext;
+	TObjectPtr<class UInputMappingContext> MappingContext;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<class UInputAction> LookAndMotion;
