@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Khaos/Public/Actors/KhaosActionableActor.h"
 #include "Player/KhaosBasePawn.h"
 #include "FirstPersonPlayerPawn.generated.h"
 
@@ -17,6 +18,9 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
+	UFUNCTION(BlueprintNativeEvent)
+	void OnPlayerActionedActor(AKhaosActionableActor* ActionedActor);
+
 	virtual void OnPlayerLookAndMotionInput(const struct FInputActionValue& Value);
 
 	virtual void OnPlayerMovementInput(bool bReverse, UE::Math::TVector<double>(AActor::*VectorFunc)() const);

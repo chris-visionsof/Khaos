@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/SplineComponent.h"
+#include "Khaos/Public/KhaosDefinitions.h"
 
 namespace 
 {
@@ -106,19 +107,22 @@ void AVRPlayerHand::OnPlayerGrabAction()
 	GrabOverlapBox->GetOverlappingComponents(OverlappingComps);
 	for (const UPrimitiveComponent* OverlappingComp : OverlappingComps)
 	{
-		// TODO: Probably shouldn't default to the root. Should probably take the grabbable component and go up the parent tree
 		AActor* OwningActor = OverlappingComp->GetOwner();
-		if(const auto RootPrimitive = Cast<UPrimitiveComponent>(OwningActor->GetRootComponent()))
+		if(OwningActor->ActorHasTag(ActorTags::Grabbable))
 		{
-			GrabConstraint->OverrideComponent1 = RootPrimitive;
-			GrabConstraint->ComponentName1 = FConstrainComponentPropName { RootPrimitive->GetFName() };
-			GrabConstraint->OverrideComponent2 = SkeletalMeshComponent;
-			GrabConstraint->ComponentName2 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
-			GrabConstraint->InitComponentConstraint();
-			bIsGrasped = true;
-			HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive });
+			// TODO: Probably shouldn't default to the root. Should probably take the grabbable component and go up the parent tree
+			if(const auto RootPrimitive = Cast<UPrimitiveComponent>(OwningActor->GetRootComponent()))
+			{
+				GrabConstraint->OverrideComponent1 = RootPrimitive;
+				GrabConstraint->ComponentName1 = FConstrainComponentPropName { RootPrimitive->GetFName() };
+				GrabConstraint->OverrideComponent2 = SkeletalMeshComponent;
+				GrabConstraint->ComponentName2 = FConstrainComponentPropName { SkeletalMeshComponent.GetFName() };
+				GrabConstraint->InitComponentConstraint();
+				bIsGrasped = true;
+				HeldActor.Emplace(FGrabbedActor { OwningActor, RootPrimitive });
 
-			break;
+				break;
+			}
 		}
 	}
 }

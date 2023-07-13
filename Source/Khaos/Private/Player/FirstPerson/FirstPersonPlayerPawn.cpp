@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraComponent.h"
 #include "FirstPersonInputDataConfig.h"
+#include "Khaos/Public/KhaosDefinitions.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 
 AFirstPersonPlayerPawn::AFirstPersonPlayerPawn() : AKhaosBasePawn()
@@ -31,6 +32,11 @@ void AFirstPersonPlayerPawn::Tick(float DeltaSeconds)
 	{
 		PhysicsHandle->SetTargetLocationAndRotation(PhysicsHandleGrabReference->GetComponentLocation(), PhysicsHandleGrabReference->GetComponentRotation());
 	}
+}
+
+void AFirstPersonPlayerPawn::OnPlayerActionedActor_Implementation(AKhaosActionableActor* ActionedActor)
+{
+	ActionedActor->PerformAction();
 }
 
 void AFirstPersonPlayerPawn::OnPlayerLookAndMotionInput(const FInputActionValue& Value)
@@ -77,10 +83,23 @@ void AFirstPersonPlayerPawn::OnPlayerPerformActionInput()
 			DrawDebugPoint(GetWorld(), Hit.Location, 10.0f, FColor::Blue, false, 0.5f, ESceneDepthPriorityGroup::SDPG_MAX);
 		}
 #endif
-		
-		FRotator NormalRot = FRotationMatrix::MakeFromX(Hit.Normal).Rotator();
-		PhysicsHandle->GrabComponentAtLocationWithRotation(Hit.GetComponent(), TEXT("None"), Hit.Location, NormalRot);
-		PhysicsHandleGrabReference->SetWorldTransform(FTransform(NormalRot, Hit.Location));
+
+		if(!IsValid(Hit.GetActor())) { return; }
+
+		AActor* HitActor = Hit.GetActor();
+		TArray<FName>& HitActorTags = HitActor->Tags;
+		if(HitActorTags.Contains(ActorTags::Grabbable))
+		{
+			FRotator NormalRot = FRotationMatrix::MakeFromX(Hit.Normal).Rotator();
+			PhysicsHandle->GrabComponentAtLocationWithRotation(Hit.GetComponent(), TEXT("None"), Hit.Location, NormalRot);
+			PhysicsHandleGrabReference->SetWorldTransform(FTransform(NormalRot, Hit.Location));
+		}
+
+		if(HitActorTags.Contains(ActorTags::Actionable)
+			&& HitActor->IsA(AKhaosActionableActor::StaticClass()))
+		{
+			OnPlayerActionedActor(Cast<AKhaosActionableActor>(HitActor));
+		}
 	}
 }
 

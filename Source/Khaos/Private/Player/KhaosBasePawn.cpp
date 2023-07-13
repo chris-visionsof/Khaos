@@ -6,11 +6,11 @@
 #include "DefaultInputConfigData.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "KhaosDefinitions.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/PlayerController.h"
+#include "Khaos/Public/KhaosDefinitions.h"
 
 AKhaosBasePawn::AKhaosBasePawn():ACharacter()
 {
