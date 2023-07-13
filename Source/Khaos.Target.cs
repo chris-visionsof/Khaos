@@ -10,6 +10,10 @@ public class KhaosTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 
-		ExtraModuleNames.AddRange( new string[] { "Khaos" } );
+		ExtraModuleNames.AddRange( new string[]
+		{
+			"Khaos",
+			"KhaosEditor"
+		});
 	}
 }

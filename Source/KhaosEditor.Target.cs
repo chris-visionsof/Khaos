@@ -10,6 +10,11 @@ public class KhaosEditorTarget : TargetRules
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		
-		ExtraModuleNames.AddRange( new string[] { "Khaos" } );
+		ExtraModuleNames.AddRange( new string[]
+		{
+			"Khaos",
+			"KhaosEditor"
+		});
+
 	}
 }
